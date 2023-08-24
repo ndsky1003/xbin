@@ -4,7 +4,8 @@ import "encoding/binary"
 
 // 保证么个字段都有值，至少有个默认值
 type Option struct {
-	Order binary.ByteOrder
+	Order         binary.ByteOrder
+	ClearOldValue *bool
 }
 
 func New() *Option {
@@ -19,12 +20,23 @@ func (this *Option) SetOrder(order binary.ByteOrder) *Option {
 	return this
 }
 
+func (this *Option) SetClearOldValue(b bool) *Option {
+	if this == nil {
+		return nil
+	}
+	this.ClearOldValue = &b
+	return this
+}
+
 func (this *Option) merge(delta *Option) {
 	if this == nil || delta == nil {
 		return
 	}
 	if delta.Order != nil {
 		this.Order = delta.Order
+	}
+	if delta.ClearOldValue != nil {
+		this.ClearOldValue = delta.ClearOldValue
 	}
 }
 

@@ -31,32 +31,63 @@ func (this *ReadBuffer) ReadLength() int {
 	return this.ReadInt()
 }
 
-// encode slice length
-// bool
-func (this *ReadBuffer) ReadBool() (bool, error) {
-	return this.BitReadBuffer.Read()
+// bool ,int, uint
+func ReadT[T Constraint](r *ReadBuffer) (T, error) {
+	var v T
+	var d any = v
+	var err error
+	switch d.(type) {
+	case bool:
+		d, err = r.BitReadBuffer.Read()
+		return d.(T), err
+	case int:
+		d = r.ReadInt()
+		return d.(T), nil
+	case uint:
+		d = r.ReadUint()
+		return d.(T), nil
+	case string:
+		length := r.ReadLength()
+		datas := r.normal_bytes[r.normal_bytes_offset : r.normal_bytes_offset+uint(length)]
+		d = string(datas)
+		r.normal_bytes_offset += uint(length)
+		return d.(T), nil
+	case int8:
+		currentbyte := r.normal_bytes[r.normal_bytes_offset]
+		r.normal_bytes_offset += 1
+		currentint8 := int8(currentbyte)
+		d = currentint8
+		return d.(T), nil
+	case uint8:
+		d = r.normal_bytes[r.normal_bytes_offset]
+		r.normal_bytes_offset += 1
+		return d.(T), nil
+		// TODO
+
+	}
+	return v, nil
 }
 
-// *bool
-func (this *ReadBuffer) ReadPtrBool() (*bool, error) {
-	b, err := this.ReadIsNotNil()
+// T
+func ReadPtrT[T Constraint](r *ReadBuffer) (*T, error) {
+	b, err := r.ReadIsNotNil()
 	if err != nil {
 		return nil, err
 	}
 	if !b {
 		return nil, nil
 	} else {
-		b, err := this.ReadBool()
+		b, err := ReadT[T](r)
 		return &b, err
 	}
 }
 
 // []bool
-func (this *ReadBuffer) ReadSliceBool() ([]bool, error) {
-	length := this.ReadLength()
-	bs := make([]bool, length)
+func ReadSliceT[T Constraint](r *ReadBuffer) ([]T, error) {
+	length := r.ReadLength()
+	bs := make([]T, length)
 	for i := range bs {
-		b, err := this.ReadBool()
+		b, err := ReadT[T](r)
 		if err != nil {
 			return nil, err
 		}
@@ -66,25 +97,25 @@ func (this *ReadBuffer) ReadSliceBool() ([]bool, error) {
 }
 
 // *[]bool
-func (this *ReadBuffer) ReadPtrSliceBool() (*[]bool, error) {
-	b, err := this.ReadIsNotNil()
+func ReadPtrSliceT[T Constraint](r *ReadBuffer) (*[]T, error) {
+	b, err := r.ReadIsNotNil()
 	if err != nil {
 		return nil, err
 	}
 	if !b {
 		return nil, nil
 	} else {
-		b, err := this.ReadSliceBool()
+		b, err := ReadSliceT[T](r)
 		return &b, err
 	}
 }
 
 // []*bool
-func (this *ReadBuffer) ReadSlicePtrBool() ([]*bool, error) {
-	length := this.ReadLength()
-	bs := make([]*bool, length)
+func ReadSlicePtrT[T Constraint](r *ReadBuffer) ([]*T, error) {
+	length := r.ReadLength()
+	bs := make([]*T, length)
 	for i := range bs {
-		b, err := this.ReadPtrBool()
+		b, err := ReadPtrT[T](r)
 		if err != nil {
 			return nil, err
 		}
@@ -94,15 +125,15 @@ func (this *ReadBuffer) ReadSlicePtrBool() ([]*bool, error) {
 }
 
 // *[]*bool
-func (this *ReadBuffer) ReadPtrSlicePtrBool() (*[]*bool, error) {
-	b, err := this.ReadIsNotNil()
+func ReadPtrSlicePtrT[T Constraint](r *ReadBuffer) (*[]*T, error) {
+	b, err := r.ReadIsNotNil()
 	if err != nil {
 		return nil, err
 	}
 	if !b {
 		return nil, nil
 	} else {
-		b, err := this.ReadSlicePtrBool()
+		b, err := ReadSlicePtrT[T](r)
 		return &b, err
 	}
 }
@@ -112,72 +143,6 @@ func (this *ReadBuffer) ReadInt() int {
 	v, length := binary.Varint(this.normal_bytes[this.normal_bytes_offset:])
 	this.normal_bytes_offset += uint(length)
 	return int(v)
-}
-
-// *int
-func (this *ReadBuffer) ReadPtrInt() (*int, error) {
-	b, err := this.ReadIsNotNil()
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, nil
-	} else {
-		b := this.ReadInt()
-		return &b, nil
-	}
-}
-
-// []int
-func (this *ReadBuffer) ReadSliceInt() ([]int, error) {
-	length := this.ReadLength()
-	bs := make([]int, length)
-	for i := range bs {
-		bs[i] = this.ReadInt()
-	}
-	return bs, nil
-}
-
-// *[]int
-func (this *ReadBuffer) ReadPtrSliceInt() (*[]int, error) {
-	b, err := this.ReadIsNotNil()
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, nil
-	} else {
-		b, err := this.ReadSliceInt()
-		return &b, err
-	}
-}
-
-// []*int
-func (this *ReadBuffer) ReadSlicePtrInt() ([]*int, error) {
-	length := this.ReadLength()
-	bs := make([]*int, length)
-	for i := range bs {
-		b, err := this.ReadPtrInt()
-		if err != nil {
-			return nil, err
-		}
-		bs[i] = b
-	}
-	return bs, nil
-}
-
-// *[]*int
-func (this *ReadBuffer) ReadPtrSlicePtrInt() (*[]*int, error) {
-	b, err := this.ReadIsNotNil()
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, nil
-	} else {
-		b, err := this.ReadSlicePtrInt()
-		return &b, err
-	}
 }
 
 func (this *ReadBuffer) ReadUint() uint {

@@ -3,9 +3,10 @@ package buf
 import (
 	"bytes"
 	"encoding/binary"
-)
+	"math"
 
-const INT_DATA_MAX_LENGTH = 10
+	"github.com/ndsky1003/xbin/options"
+)
 
 type WriteBuffer struct {
 	bytes.Buffer
@@ -32,186 +33,128 @@ func (this *WriteBuffer) Bytes() []byte {
 }
 
 // not nil=>true,nil => false
-func (this *WriteBuffer) WriteIsNotNil(b bool) {
-	_ = this.WriteBool(b)
+func (this *WriteBuffer) WriteIsNotNil(b bool, opt *options.Option) {
+	_ = WriteT(this, b, opt)
 }
 
 // int 不符合语义，长度不可能为负数，但是len这个内置函数的返回值是int，避免无效思想负担，直接这么用
-func (this *WriteBuffer) WriteLength(l int) error {
-	return this.WriteInt(l)
+func (this *WriteBuffer) WriteLength(l int, opt *options.Option) error {
+	return WriteT(this, l, opt)
 }
 
-// encode slice length
-
-// bool
-func (this *WriteBuffer) WriteBool(b bool) error {
-	this.BitWriteBuffer.WriteBool(b)
-	return nil
-}
-
-// *bool
-func (this *WriteBuffer) WritePtrBool(b *bool) error {
-	this.WriteIsNotNil(b != nil)
-	if b != nil {
-		if err := this.WriteBool(*b); err != nil {
-			return err
+// bool,int,uint
+func WriteT[T Constraint](w *WriteBuffer, v T, opt *options.Option) (err error) {
+	var d any = v
+	switch vv := d.(type) {
+	case bool:
+		w.BitWriteBuffer.WriteBool(vv)
+	case int:
+		t := [INT_DATA_MAX_LENGTH]byte{}
+		n := binary.PutVarint(t[:], int64(vv))
+		_, err = w.Write(t[:n])
+	case uint:
+		t := [INT_DATA_MAX_LENGTH]byte{}
+		n := binary.PutUvarint(t[:], uint64(vv))
+		_, err = w.Write(t[:n])
+	case string:
+		length := len(vv)
+		if err = w.WriteLength(length, opt); err != nil {
+			return
 		}
-	}
-	return nil
-}
-
-// []bool
-func (this *WriteBuffer) WriteSliceBool(bs []bool) error {
-	length := len(bs)
-	if err := this.WriteLength(length); err != nil {
-		return err
-	}
-	for _, b := range bs {
-		_ = this.WriteBool(b)
-	}
-	return nil
-}
-
-// *[]bool
-func (this *WriteBuffer) WritePtrSliceBool(bs *[]bool) error {
-	this.WriteIsNotNil(bs != nil)
-	if bs != nil {
-		if err := this.WriteSliceBool(*bs); err != nil {
-			return err
+		if vv != "" {
+			_, err = w.WriteString(vv)
 		}
+	case int8:
+		err = w.WriteByte(byte(vv))
+	case uint8:
+		err = w.WriteByte(vv)
+	case int16:
+		bs := make([]byte, 2)
+		opt.Order.PutUint16(bs, uint16(vv))
+		_, err = w.Write(bs)
+	case uint16:
+		bs := make([]byte, 2)
+		opt.Order.PutUint16(bs, vv)
+		_, err = w.Write(bs)
+	case int32:
+		bs := make([]byte, 4)
+		opt.Order.PutUint32(bs, uint32(vv))
+		_, err = w.Write(bs)
+	case uint32:
+		bs := make([]byte, 4)
+		opt.Order.PutUint32(bs, vv)
+		_, err = w.Write(bs)
+	case int64:
+		bs := make([]byte, 8)
+		opt.Order.PutUint64(bs, uint64(vv))
+		_, err = w.Write(bs)
+	case uint64:
+		bs := make([]byte, 8)
+		opt.Order.PutUint64(bs, vv)
+		_, err = w.Write(bs)
+	case float32:
+		bs := make([]byte, 4)
+		opt.Order.PutUint32(bs, math.Float32bits(vv))
+		_, err = w.Write(bs)
+	case float64:
+		bs := make([]byte, 8)
+		opt.Order.PutUint64(bs, math.Float64bits(vv))
+		_, err = w.Write(bs)
 	}
-	return nil
-}
-
-// []*bool
-func (this *WriteBuffer) WriteSlicePtrBool(bs []*bool) error {
-	length := len(bs)
-	if err := this.WriteLength(length); err != nil {
-		return err
-	}
-	for _, b := range bs {
-		_ = this.WritePtrBool(b)
-	}
-	return nil
-}
-
-// *[]*bool
-func (this *WriteBuffer) WritePtrSlicePtrBool(bs *[]*bool) error {
-	this.WriteIsNotNil(bs != nil)
-	if bs != nil {
-		return this.WriteSlicePtrBool(*bs)
-	}
-	return nil
-}
-
-// 10个字节，与定长还是有区别的
-// int
-func (this *WriteBuffer) WriteInt(i int) (err error) {
-	t := [INT_DATA_MAX_LENGTH]byte{}
-	n := binary.PutVarint(t[:], int64(i))
-	_, err = this.Write(t[:n])
 	return
 }
 
-// *int
-func (this *WriteBuffer) WritePtrInt(i *int) error {
-	this.WriteIsNotNil(i != nil)
-	if i != nil {
-		if err := this.WriteInt(*i); err != nil {
+// *bool,*int,*uint
+func WritePtrT[T Constraint](w *WriteBuffer, v *T, opt *options.Option) error {
+	w.WriteIsNotNil(v != nil, opt)
+	if v != nil {
+		if err := WriteT(w, *v, opt); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// []int
-func (this *WriteBuffer) WriteSliceInt(is []int) error {
-	length := len(is)
-	if err := this.WriteLength(length); err != nil {
+// []bool,[]int,[]uint
+func WriteSliceT[T Constraint](w *WriteBuffer, vs []T, opt *options.Option) error {
+	length := len(vs)
+	if err := w.WriteLength(length, opt); err != nil {
 		return err
 	}
-	for _, b := range is {
-		_ = this.WriteInt(b)
+	for _, b := range vs {
+		_ = WriteT(w, b, opt)
 	}
 	return nil
 }
 
-// *[]int
-func (this *WriteBuffer) WritePtrSliceInt(is *[]int) error {
-	this.WriteIsNotNil(is != nil)
-	if is != nil {
-		if err := this.WriteSliceInt(*is); err != nil {
+// *[]bool,*[]int,*[]uint
+func WritePtrSliceT[T Constraint](w *WriteBuffer, bs *[]T, opt *options.Option) error {
+	w.WriteIsNotNil(bs != nil, opt)
+	if bs != nil {
+		if err := WriteSliceT(w, *bs, opt); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// []*int
-func (this *WriteBuffer) WriteSlicePtrInt(is []*int) error {
-	length := len(is)
-	if err := this.WriteLength(length); err != nil {
+// []*bool,[]*int,[]*uint
+func WriteSlicePtrT[T Constraint](w *WriteBuffer, bs []*T, opt *options.Option) error {
+	length := len(bs)
+	if err := w.WriteLength(length, opt); err != nil {
 		return err
 	}
-	for _, b := range is {
-		_ = this.WritePtrInt(b)
+	for _, b := range bs {
+		_ = WritePtrT(w, b, opt)
 	}
 	return nil
 }
 
-// *[]*int
-func (this *WriteBuffer) WritePtrSlicePtrInt(is *[]*int) error {
-	this.WriteIsNotNil(is != nil)
-	if is != nil {
-		return this.WriteSlicePtrInt(*is)
+// *[]*bool,*[]*int,*[]*uint
+func WritePtrSlicePtrT[T Constraint](w *WriteBuffer, bs *[]*T, opt *options.Option) error {
+	w.WriteIsNotNil(bs != nil, opt)
+	if bs != nil {
+		return WriteSlicePtrT(w, *bs, opt)
 	}
 	return nil
 }
-
-func (this *WriteBuffer) WriteUint(i uint) (err error) {
-	t := [INT_DATA_MAX_LENGTH]byte{}
-	n := binary.PutUvarint(t[:], uint64(i))
-	_, err = this.Write(t[:n])
-	return
-}
-
-// func write_strs(w *buf.WriteBuffer, s []string) (err error) {
-// 	length := len(s)
-// 	if err = encode_int(w, length); err != nil {
-// 		return
-// 	}
-// 	for _, str := range s {
-// 		if err = write_str(w, str); err != nil {
-// 			return
-// 		}
-// 	}
-// 	return
-// }
-//
-// func write_strs_ptr(w *buf.WriteBuffer, s []*string) (err error) {
-// 	length := len(s)
-// 	if err = encode_int(w, length); err != nil {
-// 		return
-// 	}
-// 	for _, str := range s {
-// 		var s string
-// 		if str != nil {
-// 			s = *str
-// 		}
-// 		if err = write_str(w, s); err != nil {
-// 			return
-// 		}
-// 	}
-// 	return
-// }
-//
-// func write_str(w *buf.WriteBuffer, s string) (err error) {
-// 	length := len(s)
-// 	if err = encode_int(w, length); err != nil {
-// 		return
-// 	}
-// 	if s != "" {
-// 		_, err = w.WriteString(s)
-// 	}
-// 	return
-// }

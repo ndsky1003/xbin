@@ -5,7 +5,7 @@ import "encoding/binary"
 // 保证么个字段都有值，至少有个默认值
 type Option struct {
 	Order         binary.ByteOrder
-	ClearOldValue *bool
+	ClearOldValue *bool // 意义就是写入的是个nil，读的时候是否将nil当做一个零值覆盖到占坑指针的那个非默认值
 }
 
 func New() *Option {

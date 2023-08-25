@@ -1,7 +1,6 @@
 package xbin
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"reflect"
@@ -10,7 +9,7 @@ import (
 	"github.com/ndsky1003/xbin/options"
 )
 
-func Write[T write_type](
+func Write[T buf.WConstraint](
 	w *buf.WriteBuffer,
 	data T,
 	opts ...*options.Option,
@@ -22,44 +21,330 @@ func Write[T write_type](
 	opt := options.New().Merge(DefaultOption).Merge(opts...)
 	switch v := d.(type) {
 	case bool:
-		return w.WriteBool(v)
+		return buf.WriteT(w, v, opt)
 	case *bool:
-		return w.WritePtrBool(v)
+		return buf.WritePtrT(w, v, opt)
 	case []bool:
-		return w.WriteSliceBool(v)
+		return buf.WriteSliceT(w, v, opt)
 	case *[]bool:
-		return w.WritePtrSliceBool(v)
+		return buf.WritePtrSliceT(w, v, opt)
 	case []*bool:
-		return w.WriteSlicePtrBool(v)
+		return buf.WriteSlicePtrT(w, v, opt)
 	case *[]*bool:
-		return w.WritePtrSlicePtrBool(v)
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case int:
+		return buf.WriteT(w, v, opt)
+	case *int:
+		return buf.WritePtrT(w, v, opt)
+	case []int:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]int:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*int:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*int:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case uint:
+		return buf.WriteT(w, v, opt)
+	case *uint:
+		return buf.WritePtrT(w, v, opt)
+	case []uint:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]uint:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*uint:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*uint:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case string:
+		return buf.WriteT(w, v, opt)
+	case *string:
+		return buf.WritePtrT(w, v, opt)
+	case []string:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]string:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*string:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*string:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case int8:
+		return buf.WriteT(w, v, opt)
+	case *int8:
+		return buf.WritePtrT(w, v, opt)
+	case []int8:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]int8:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*int8:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*int8:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case uint8:
+		return buf.WriteT(w, v, opt)
+	case *uint8:
+		return buf.WritePtrT(w, v, opt)
+	case []uint8:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]uint8:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*uint8:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*uint8:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case int16:
+		return buf.WriteT(w, v, opt)
+	case *int16:
+		return buf.WritePtrT(w, v, opt)
+	case []int16:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]int16:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*int16:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*int16:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case uint16:
+		return buf.WriteT(w, v, opt)
+	case *uint16:
+		return buf.WritePtrT(w, v, opt)
+	case []uint16:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]uint16:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*uint16:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*uint16:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case int32:
+		return buf.WriteT(w, v, opt)
+	case *int32:
+		return buf.WritePtrT(w, v, opt)
+	case []int32:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]int32:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*int32:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*int32:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case uint32:
+		return buf.WriteT(w, v, opt)
+	case *uint32:
+		return buf.WritePtrT(w, v, opt)
+	case []uint32:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]uint32:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*uint32:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*uint32:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case int64:
+		return buf.WriteT(w, v, opt)
+	case *int64:
+		return buf.WritePtrT(w, v, opt)
+	case []int64:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]int64:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*int64:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*int64:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case uint64:
+		return buf.WriteT(w, v, opt)
+	case *uint64:
+		return buf.WritePtrT(w, v, opt)
+	case []uint64:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]uint64:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*uint64:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*uint64:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case float32:
+		return buf.WriteT(w, v, opt)
+	case *float32:
+		return buf.WritePtrT(w, v, opt)
+	case []float32:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]float32:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*float32:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*float32:
+		return buf.WritePtrSlicePtrT(w, v, opt)
+
+	case float64:
+		return buf.WriteT(w, v, opt)
+	case *float64:
+		return buf.WritePtrT(w, v, opt)
+	case []float64:
+		return buf.WriteSliceT(w, v, opt)
+	case *[]float64:
+		return buf.WritePtrSliceT(w, v, opt)
+	case []*float64:
+		return buf.WriteSlicePtrT(w, v, opt)
+	case *[]*float64:
+		return buf.WritePtrSlicePtrT(w, v, opt)
 	default:
-		rv := reflect.Indirect(reflect.ValueOf(data))
-		switch rv.Kind() {
-		case reflect.Array:
-		case reflect.Map:
-
-		}
-
-		return binary.Write(w, opt.Order, data)
+		return fmt.Errorf("write not support:%v", reflect.TypeOf(data).Name())
 	}
 }
 
 /*
-saveIsPtr 判定数据存入的时候是否是指针，用于决定是否进行指针的nil判断
+saveIsPtr 判定数据存入的时候是否是指针，用于决定是否进行指针的nil判断,这个字段一定保证正确，否则错位，调试还有可能成功
+eg:存取*int，你无论读的时候无论传入什么值，都能正确的读取，因为这个nil判断在BitWriteBuffer,这里就会少读一个，就会导致错位
 T 一定是一个指针类型
 */
 
-func Read[T read_type](r *buf.ReadBuffer, saveIsPtr bool, data T, opts ...*options.Option) error {
+func Read[T buf.RConstraint](
+	r *buf.ReadBuffer,
+	saveIsPtr bool,
+	data T,
+	opts ...*options.Option,
+) error {
 	if r == nil {
 		return errors.New("read buffer is nil")
 	}
 	var d any = data
 	opt := options.New().Merge(DefaultOption).Merge(opts...)
-	switch v := d.(type) {
-	case *bool:
+	switch d.(type) {
+	case *bool, *[]bool, *[]*bool:
+		return read[bool](r, saveIsPtr, data, opt)
+
+	case *int, *[]int, *[]*int:
+		return read[int](r, saveIsPtr, data, opt)
+
+	case *uint, *[]uint, *[]*uint:
+		return read[uint](r, saveIsPtr, data, opt)
+
+	case *string, *[]string, *[]*string:
+		return read[string](r, saveIsPtr, data, opt)
+
+	case *int8, *[]int8, *[]*int8:
+		return read[int8](r, saveIsPtr, data, opt)
+
+	case *uint8, *[]uint8, *[]*uint8:
+		return read[uint8](r, saveIsPtr, data, opt)
+
+	case *int16, *[]int16, *[]*int16:
+		return read[int16](r, saveIsPtr, data, opt)
+
+	case *uint16, *[]uint16, *[]*uint16:
+		return read[uint16](r, saveIsPtr, data, opt)
+
+	case *int32, *[]int32, *[]*int32:
+		return read[int32](r, saveIsPtr, data, opt)
+
+	case *uint32, *[]uint32, *[]*uint32:
+		return read[uint32](r, saveIsPtr, data, opt)
+
+	case *int64, *[]int64, *[]*int64:
+		return read[int64](r, saveIsPtr, data, opt)
+
+	case *uint64, *[]uint64, *[]*uint64:
+		return read[uint64](r, saveIsPtr, data, opt)
+
+	case *float32, *[]float32, *[]*float32:
+		return read[float32](r, saveIsPtr, data, opt)
+
+	case *float64, *[]float64, *[]*float64:
+		return read[float64](r, saveIsPtr, data, opt)
+	// 	if !saveIsPtr {
+	// 		if b, err := buf.ReadT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				*v = b
+	// 			}
+	// 		}
+	// 	} else {
+	// 		if b, err := buf.ReadPtrT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				if b != nil {
+	// 					*v = *b
+	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
+	// 					*v = false // 用零值抹掉原来的值
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// case *[]bool:
+	// 	if !saveIsPtr {
+	// 		if b, err := buf.ReadSliceT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				*v = b
+	// 			}
+	// 		}
+	// 	} else {
+	// 		if b, err := buf.ReadPtrSliceT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				if b != nil {
+	// 					*v = *b
+	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
+	// 					*v = []bool{}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// case *[]*bool:
+	// 	if !saveIsPtr {
+	// 		if b, err := buf.ReadSlicePtrT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				*v = b
+	// 			}
+	// 		}
+	// 	} else {
+	// 		if b, err := buf.ReadPtrSlicePtrT[bool](r); err != nil {
+	// 			return err
+	// 		} else {
+	// 			if data != nil {
+	// 				if b != nil {
+	// 					*v = *b
+	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
+	// 					*v = []*bool{}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	default:
+		return fmt.Errorf("not support:%v", reflect.TypeOf(data).Name())
+	}
+}
+
+func read[T buf.Constraint](
+	r *buf.ReadBuffer,
+	saveIsPtr bool,
+	data any,
+	opt *options.Option,
+) error {
+	switch v := data.(type) {
+	case *T:
 		if !saveIsPtr {
-			if b, err := r.ReadBool(); err != nil {
+			if b, err := buf.ReadT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -67,21 +352,22 @@ func Read[T read_type](r *buf.ReadBuffer, saveIsPtr bool, data T, opts ...*optio
 				}
 			}
 		} else {
-			if b, err := r.ReadPtrBool(); err != nil {
+			if b, err := buf.ReadPtrT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
 					if b != nil {
 						*v = *b
 					} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-						*v = false // 用零值抹掉原来的值
+						var tmpV T
+						*v = tmpV // 用零值抹掉原来的值
 					}
 				}
 			}
 		}
-	case *[]bool:
+	case *[]T:
 		if !saveIsPtr {
-			if b, err := r.ReadSliceBool(); err != nil {
+			if b, err := buf.ReadSliceT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -89,21 +375,21 @@ func Read[T read_type](r *buf.ReadBuffer, saveIsPtr bool, data T, opts ...*optio
 				}
 			}
 		} else {
-			if b, err := r.ReadPtrSliceBool(); err != nil {
+			if b, err := buf.ReadPtrSliceT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
 					if b != nil {
 						*v = *b
 					} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-						*v = []bool{}
+						*v = []T{}
 					}
 				}
 			}
 		}
-	case *[]*bool:
+	case *[]*T:
 		if !saveIsPtr {
-			if b, err := r.ReadSlicePtrBool(); err != nil {
+			if b, err := buf.ReadSlicePtrT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -111,14 +397,14 @@ func Read[T read_type](r *buf.ReadBuffer, saveIsPtr bool, data T, opts ...*optio
 				}
 			}
 		} else {
-			if b, err := r.ReadPtrSlicePtrBool(); err != nil {
+			if b, err := buf.ReadPtrSlicePtrT[T](r); err != nil {
 				return err
 			} else {
 				if data != nil {
 					if b != nil {
 						*v = *b
 					} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-						*v = []*bool{}
+						*v = []*T{}
 					}
 				}
 			}

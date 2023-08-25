@@ -1,19 +1,5 @@
 package xbin
 
-const (
-	True  byte = 0b00000001
-	False byte = 0b11111111
-)
-
-func bool2byte(b bool) (byte byte) {
-	if b {
-		byte = True
-	} else {
-		byte = False
-	}
-	return
-}
-
 type write_type interface {
 	bool | *bool | []bool | *[]bool | []*bool | *[]*bool |
 		int8 | *int8 | []int8 | *[]int8 | []*int8 | *[]*int8 |

@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 )
 
+const INT_DATA_MAX_LENGTH = 10
+
 type WriteBuffer struct {
 	bytes.Buffer
 	BitWriteBuffer
@@ -19,7 +21,7 @@ func (this *WriteBuffer) Bytes() []byte {
 	flag_bytes_length := len(flag_bytes)
 	normal_bytes := this.Buffer.Bytes()
 
-	t := [10]byte{}
+	t := [INT_DATA_MAX_LENGTH]byte{}
 	n := binary.PutUvarint(t[:], uint64(flag_bytes_length))
 	flag_bytes_length_bytes := t[:n]
 	result_data := make([]byte, 0, len(flag_bytes_length_bytes)+flag_bytes_length+len(normal_bytes))
@@ -103,15 +105,71 @@ func (this *WriteBuffer) WritePtrSlicePtrBool(bs *[]*bool) error {
 }
 
 // 10个字节，与定长还是有区别的
+// int
 func (this *WriteBuffer) WriteInt(i int) (err error) {
-	t := [10]byte{}
+	t := [INT_DATA_MAX_LENGTH]byte{}
 	n := binary.PutVarint(t[:], int64(i))
 	_, err = this.Write(t[:n])
 	return
 }
 
+// *int
+func (this *WriteBuffer) WritePtrInt(i *int) error {
+	this.WriteIsNotNil(i != nil)
+	if i != nil {
+		if err := this.WriteInt(*i); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// []int
+func (this *WriteBuffer) WriteSliceInt(is []int) error {
+	length := len(is)
+	if err := this.WriteLength(length); err != nil {
+		return err
+	}
+	for _, b := range is {
+		_ = this.WriteInt(b)
+	}
+	return nil
+}
+
+// *[]int
+func (this *WriteBuffer) WritePtrSliceInt(is *[]int) error {
+	this.WriteIsNotNil(is != nil)
+	if is != nil {
+		if err := this.WriteSliceInt(*is); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// []*int
+func (this *WriteBuffer) WriteSlicePtrInt(is []*int) error {
+	length := len(is)
+	if err := this.WriteLength(length); err != nil {
+		return err
+	}
+	for _, b := range is {
+		_ = this.WritePtrInt(b)
+	}
+	return nil
+}
+
+// *[]*int
+func (this *WriteBuffer) WritePtrSlicePtrInt(is *[]*int) error {
+	this.WriteIsNotNil(is != nil)
+	if is != nil {
+		return this.WriteSlicePtrInt(*is)
+	}
+	return nil
+}
+
 func (this *WriteBuffer) WriteUint(i uint) (err error) {
-	t := [10]byte{}
+	t := [INT_DATA_MAX_LENGTH]byte{}
 	n := binary.PutUvarint(t[:], uint64(i))
 	_, err = this.Write(t[:n])
 	return

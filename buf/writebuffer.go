@@ -68,6 +68,7 @@ func WriteT[T Constraint](w *WriteBuffer, v T, opt *options.Option) (err error) 
 		err = w.WriteByte(byte(vv))
 	case uint8:
 		err = w.WriteByte(vv)
+
 	case int16:
 		bs := make([]byte, 2)
 		opt.Order.PutUint16(bs, uint16(vv))

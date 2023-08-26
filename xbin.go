@@ -17,9 +17,16 @@ func Write[T buf.WConstraint](
 	if w == nil {
 		return errors.New("buffer is nil")
 	}
-	var d any = data
 	opt := options.New().Merge(DefaultOption).Merge(opts...)
-	switch v := d.(type) {
+	return write(w, data, opt)
+}
+
+func write(
+	w *buf.WriteBuffer,
+	data any,
+	opt *options.Option,
+) error {
+	switch v := data.(type) {
 	case bool:
 		return buf.WriteT(w, v, opt)
 	case *bool:
@@ -265,71 +272,6 @@ func Read[T buf.RConstraint](
 
 	case *float64, *[]float64, *[]*float64:
 		return read[float64](r, saveIsPtr, data, opt)
-	// 	if !saveIsPtr {
-	// 		if b, err := buf.ReadT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				*v = b
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if b, err := buf.ReadPtrT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				if b != nil {
-	// 					*v = *b
-	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-	// 					*v = false // 用零值抹掉原来的值
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// case *[]bool:
-	// 	if !saveIsPtr {
-	// 		if b, err := buf.ReadSliceT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				*v = b
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if b, err := buf.ReadPtrSliceT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				if b != nil {
-	// 					*v = *b
-	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-	// 					*v = []bool{}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// case *[]*bool:
-	// 	if !saveIsPtr {
-	// 		if b, err := buf.ReadSlicePtrT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				*v = b
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if b, err := buf.ReadPtrSlicePtrT[bool](r); err != nil {
-	// 			return err
-	// 		} else {
-	// 			if data != nil {
-	// 				if b != nil {
-	// 					*v = *b
-	// 				} else if opt.ClearOldValue != nil && *opt.ClearOldValue {
-	// 					*v = []*bool{}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
 	default:
 		return fmt.Errorf("not support:%v", reflect.TypeOf(data).Name())
 	}
@@ -344,7 +286,7 @@ func read[T buf.Constraint](
 	switch v := data.(type) {
 	case *T:
 		if !saveIsPtr {
-			if b, err := buf.ReadT[T](r); err != nil {
+			if b, err := buf.ReadT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -352,7 +294,7 @@ func read[T buf.Constraint](
 				}
 			}
 		} else {
-			if b, err := buf.ReadPtrT[T](r); err != nil {
+			if b, err := buf.ReadPtrT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -367,7 +309,7 @@ func read[T buf.Constraint](
 		}
 	case *[]T:
 		if !saveIsPtr {
-			if b, err := buf.ReadSliceT[T](r); err != nil {
+			if b, err := buf.ReadSliceT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -375,7 +317,7 @@ func read[T buf.Constraint](
 				}
 			}
 		} else {
-			if b, err := buf.ReadPtrSliceT[T](r); err != nil {
+			if b, err := buf.ReadPtrSliceT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -389,7 +331,7 @@ func read[T buf.Constraint](
 		}
 	case *[]*T:
 		if !saveIsPtr {
-			if b, err := buf.ReadSlicePtrT[T](r); err != nil {
+			if b, err := buf.ReadSlicePtrT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -397,7 +339,7 @@ func read[T buf.Constraint](
 				}
 			}
 		} else {
-			if b, err := buf.ReadPtrSlicePtrT[T](r); err != nil {
+			if b, err := buf.ReadPtrSlicePtrT[T](r, opt); err != nil {
 				return err
 			} else {
 				if data != nil {
@@ -410,8 +352,7 @@ func read[T buf.Constraint](
 			}
 		}
 	default:
-		fmt.Println(opt)
-		return nil
+		return fmt.Errorf("not support:%v", reflect.TypeOf(data).Name())
 	}
 	return nil
 }

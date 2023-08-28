@@ -9,6 +9,14 @@ import (
 	"github.com/ndsky1003/xbin/options"
 )
 
+func WriteForm(w *buf.WriteBuffer, s Marshaler, opts ...*options.Option) error {
+	data, err := s.MarshalXBIN()
+	if err != nil {
+		return err
+	}
+	return Write(w, data, opts...)
+}
+
 func Write[T buf.WConstraint](
 	w *buf.WriteBuffer,
 	data T,
@@ -17,6 +25,7 @@ func Write[T buf.WConstraint](
 	if w == nil {
 		return errors.New("buffer is nil")
 	}
+
 	opt := options.New().Merge(DefaultOption).Merge(opts...)
 	return write(w, data, opt)
 }
@@ -218,6 +227,14 @@ saveIsPtr 判定数据存入的时候是否是指针，用于决定是否进行�
 eg:存取*int，你无论读的时候无论传入什么值，都能正确的读取，因为这个nil判断在BitWriteBuffer,这里就会少读一个，就会导致错位
 T 一定是一个指针类型
 */
+
+func ReadForm(r *buf.ReadBuffer, s Unmarshaler, opts ...*options.Option) error {
+	var bs []byte
+	if err := Read(r, false, &bs, opts...); err != nil {
+		return err
+	}
+	return s.UnmarshalXBIN(bs)
+}
 
 func Read[T buf.RConstraint](
 	r *buf.ReadBuffer,
